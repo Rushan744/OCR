@@ -1,0 +1,24 @@
+import requests
+from bs4 import BeautifulSoup
+
+# URL of the website to scrape
+url = "https://pypi.org/project/beautifulsoup4/"
+
+# Send a GET request to the URL
+response = requests.get(url)
+
+# Check if the request was successful (status code 200)
+if response.status_code == 200:
+    # Use BeautifulSoup to parse the HTML content of the page
+    soup = BeautifulSoup(response.text, "html.parser")
+    
+    # Example: extract the title of the page
+    title = soup.title.text
+    print("Page Title:", title)
+    
+    # Example: extract all links on the page
+    links = soup.find_all("a")
+    for link in links:
+        print("Link:", link.get("href"))
+else:
+    print("Failed to request HTML content:", response.status_code)
