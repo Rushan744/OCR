@@ -1,0 +1,34 @@
+import pytesseract
+from PIL import Image
+import requests
+from io import BytesIO
+
+# Function to extract text from remote image using pytesseract
+def extract_text_from_image_remote(image_url):
+    try:
+        # Get image content from URL
+        response = requests.get(image_url)
+        response.raise_for_status()  # Check if request was successful
+        img = Image.open(BytesIO(response.content))
+
+        pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR'
+        
+        # Extract text using pytesseract
+        extracted_text = pytesseract.image_to_string(img)
+        return extracted_text
+    except Exception as e:
+        print("Error:", e)
+        return None
+
+# URL of your PNG image
+image_url = "https://invoiceocrp3.azurewebsites.net/static/FAC_2019_0007-2747871.png"
+
+# Extract text from remote image using pytesseract
+remote_text = extract_text_from_image_remote(image_url)
+if remote_text:
+    print("Text extracted from remote image:")
+    print(remote_text)
+else:
+    print("Failed to extract text from the remote image.")
+
+print("End of processing.")
