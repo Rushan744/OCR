@@ -1,0 +1,60 @@
+import pyodbc
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+database_host = os.environ.get("DATABASE_HOST")
+database_port = os.environ.get("DATABASE_PORT")
+database_name = os.environ.get("DATABASE_NAME")
+database_user = os.environ.get("DATABASE_USER")
+database_password = os.environ.get("DATABASE_PASSWORD")
+print(database_host, database_port, database_name, database_user, database_password)
+# Construct the connection string
+connection_string = (f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+                     f"SERVER={database_host},{database_port};"
+                     f"DATABASE={database_name};"
+                     f"UID={database_user};"
+                     f"PWD={database_password};"
+                     f"Encrypt=yes;"
+                     f"TrustServerCertificate=no;"
+                     f"Connection Timeout=30;")
+
+try:
+    # Establish a connection to the database
+    conn = pyodbc.connect(connection_string)
+    print("Connection established successfully!")
+
+except Exception as e:
+    print("Error:", e)
+
+finally:
+    
+    if 'conn' in locals():
+        conn.close()
+
+'''import pyodbc
+
+# This example requires environment variables named "AZURE_SPEECH_KEY" and "AZURE_SPEECH_REGION"  
+server = "server-ocr-sql.database.windows.net"#credentials["AZURE_SQL_SERVER_NAME"]
+port = 1433 #credentials["AZURE_SQL_SERVER_PORT"]
+database = "sql_db_ocr"#credentials["AZURE_SQL_DB_NAME"]
+uid = "Saeed" #credentials["AZURE_SQL_DB_USER"]
+pwd = "Rushan1744" #credentials["AZURE_SQL_DB_PWD"]
+        
+    # ODBC connection
+connection_string = (
+        f"Driver={{ODBC Driver 18 for SQL Server}};"
+        f"Server={server},{port};"
+        f"Database={database};"
+        f"Uid={uid};"
+        f"Pwd={pwd};"
+        "Encrypt=yes;"
+        "TrustServerCertificate=no;"
+        "Connection Timeout=30;"
+    )
+
+    # Establish the connection
+connection = pyodbc.connect(connection_string)'''
