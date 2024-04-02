@@ -1,0 +1,66 @@
+import streamlit as st
+import pyodbc
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get database connection details from environment variables
+database_host = os.environ.get("DATABASE_HOST")
+database_port = os.environ.get("DATABASE_PORT")
+database_name = os.environ.get("DATABASE_NAME")
+database_user = os.environ.get("DATABASE_USER")
+database_password = os.environ.get("DATABASE_PASSWORD")
+
+# Construct the connection string
+connection_string = (f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+                     f"SERVER={database_host},{database_port};"
+                     f"DATABASE={database_name};"
+                     f"UID={database_user};"
+                     f"PWD={database_password};"
+                     f"Encrypt=yes;"
+                     f"TrustServerCertificate=no;"
+                     f"Connection Timeout=30;")
+
+# Function to query database based on Numbill
+def query_database(numbill):
+    try:
+        # Establish a connection to the database
+        conn = pyodbc.connect(connection_string)
+        
+        # Execute SQL query to retrieve client details
+        cursor = conn.cursor()
+        sql_query = f"SELECT * FROM sql_db_ocr.dbo.Billing WHERE NumbBill = '{numbill}'"
+        cursor.execute(sql_query)
+        
+        # Fetch column names
+        columns = [column[0] for column in cursor.description]
+        
+        # Fetch rows
+        rows = cursor.fetchall()
+        
+        return columns, rows
+
+    except Exception as e:
+        return None, str(e)
+
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
+# Streamlit UI
+st.title("Client Details Lookup")
+
+numbill = st.text_input("Enter NumbBill:")
+if st.button("Search"):
+    if numbill:
+        columns, result = query_database(numbill)
+        if columns and result:
+            st.write("Client details found:")
+            for i in range(len(columns)):
+                st.write(f"{columns[i]}: {result[0][i]}")
+        else:
+            st.write("No client details found.")
+    else:
+        st.write("Please enter a NumbBill.")
