@@ -1,8 +1,14 @@
 azure-cognitiveservices-vision-computervision
 msrest
 python-dotenv
-pillow
 pyzbar
 beautifulsoup4
 pytesseract
-
+msrest
+python-dotenv
+Pillow
+requests
+nltk
+textblob
+streamlit
+pyodbc
