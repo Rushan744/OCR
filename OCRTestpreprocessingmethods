@@ -1,0 +1,104 @@
+from azure.cognitiveservices.vision.computervision import ComputerVisionClient
+from azure.cognitiveservices.vision.computervision.models import OperationStatusCodes
+from msrest.authentication import CognitiveServicesCredentials
+from dotenv import load_dotenv
+from PIL import Image
+import requests
+import io
+import pyzbar.pyzbar as pyzbar
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from textblob import TextBlob
+import os
+import time
+
+# Load environment variables
+load_dotenv()
+
+# Azure Cognitive Services credentials
+subscription_key = os.environ["SUBSCRIPTION_KEY"]
+endpoint = os.environ["ENDPOINT"]
+computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
+
+def extract_text_from_image(image_url):
+    # Perform OCR on the image URL
+    read_response = computervision_client.read(image_url, raw=True)
+    read_operation_location = read_response.headers["Operation-Location"]
+    operation_id = read_operation_location.split("/")[-1]
+
+    # Wait for operation to complete
+    while True:
+        read_result = computervision_client.get_read_result(operation_id)
+        if read_result.status not in ['notStarted', 'running']:
+            break
+        time.sleep(1)
+
+    # Extract and return all the detected text
+    detected_text = ""
+    if read_result.status == OperationStatusCodes.succeeded:
+        for text_result in read_result.analyze_result.read_results:
+            for line in text_result.lines:
+                detected_text += line.text + " "
+    else:
+        print("Failed to extract text from the image.")
+
+    return detected_text.strip()
+
+def extract_qr_code(image_url):
+    # Extract QR code content from the image URL
+    response = requests.get(image_url)
+    img = Image.open(io.BytesIO(response.content))
+    decoded_objects = pyzbar.decode(img)
+    decoded_text = ""
+    for obj in decoded_objects:
+        decoded_text += obj.data.decode('utf-8') + " "
+    return decoded_text.strip()
+
+def preprocess_text(text):
+    # Remove special characters and non-printable characters
+    cleaned_text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+    
+    # Convert text to lowercase
+    cleaned_text = cleaned_text.lower()
+    
+    # Tokenize the text
+    tokens = word_tokenize(cleaned_text)
+    
+    # Remove stopwords
+    stop_words = set(stopwords.words('english'))
+    filtered_tokens = [word for word in tokens if word not in stop_words]
+    
+    # Lemmatization
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_tokens = [lemmatizer.lemmatize(word) for word in filtered_tokens]
+    
+    # Spell correction using TextBlob
+    corrected_tokens = [str(TextBlob(word).correct()) for word in lemmatized_tokens]
+    
+    # Join the tokens back into text
+    preprocessed_text = ' '.join(corrected_tokens)
+    
+    return preprocessed_text
+
+# Image URL
+image_url = "https://invoiceocrp3.azurewebsites.net/invoices/FAC_2019_0046-4356099"
+
+# Extract text from the image
+all_text = extract_text_from_image(image_url)
+
+# Extract QR code content from the image
+qr_code_text = extract_qr_code(image_url)
+
+# Preprocess the extracted text
+preprocessed_text = preprocess_text(all_text)
+
+# Print the results
+print("=== Extracted Text ===")
+print(all_text)
+print("\n=== QR Code Content ===")
+print(qr_code_text)
+print("\n=== Preprocessed Text ===")
+print(preprocessed_text)
