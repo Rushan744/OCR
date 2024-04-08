@@ -64,3 +64,27 @@ print("QR Code Content:")
 print(qr_code_text)
 
 print("End of processing.")
+
+#preprocessing
+
+import re
+
+def preprocess_text(text):
+    # Remove special characters and non-printable characters
+    cleaned_text = re.sub(r'[^a-zA-Z0-9\s]', '', text)
+    
+    # Convert text to lowercase
+    cleaned_text = cleaned_text.lower()
+    
+    # Remove extra whitespaces
+    cleaned_text = ' '.join(cleaned_text.split())
+    
+    return cleaned_text
+
+# Preprocess the extracted text
+preprocessed_text = preprocess_text(all_text)
+
+# Print the preprocessed text
+print("Preprocessed Text:")
+print(preprocessed_text)'''
+
