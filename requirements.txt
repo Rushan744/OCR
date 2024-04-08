@@ -12,3 +12,4 @@ nltk
 textblob
 streamlit
 pyodbc
+Regex
